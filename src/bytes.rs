@@ -12,6 +12,15 @@ const MIB: f64 = KIB * 1024.0;
 const GIB: f64 = MIB * 1024.0;
 const TIB: f64 = GIB * 1024.0;
 
+// Bit units are counted in bits, then divided by 8 to land in bytes like
+// everything else this module produces. Values are powers of 1000, matching
+// how bandwidth is normally advertised (a "1 Gbit" link is 1e9 bits/s, not
+// 2^30).
+const KBIT: f64 = 1000.0;
+const MBIT: f64 = KBIT * 1000.0;
+const GBIT: f64 = MBIT * 1000.0;
+const TBIT: f64 = GBIT * 1000.0;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseByteSizeError(String);
 
@@ -31,6 +40,13 @@ impl std::error::Error for ParseByteSizeError {}
 /// ignored, underscores between digits are dropped, and a comma is
 /// accepted as a decimal separator ("1,5 mb"). A bare number with no
 /// unit is read as a count of bytes.
+///
+/// Also accepts bit-based units for network throughput figures (`bit`,
+/// `kbit`, `mbit`, `gbit`, `tbit`, and the `bps`/`kbps`/`mbps`/`gbps`/`tbps`
+/// spellings), at powers of 1000, converted to bytes by dividing by 8.
+/// Since unit matching is case-insensitive there's no way to tell "10 Mb"
+/// meant megabits rather than megabytes, so the short form always means
+/// bytes - spell out `mbit` or `mbps` for bits.
 pub fn parse_bytes(input: &str) -> Result<u64, ParseByteSizeError> {
     let original = input;
     let trimmed = input.trim();
@@ -82,6 +98,11 @@ pub fn parse_bytes(input: &str) -> Result<u64, ParseByteSizeError> {
         "mi" | "mib" => MIB,
         "gi" | "gib" => GIB,
         "ti" | "tib" => TIB,
+        "bit" | "bits" | "bps" => 1.0 / 8.0,
+        "kbit" | "kbits" | "kbps" => KBIT / 8.0,
+        "mbit" | "mbits" | "mbps" => MBIT / 8.0,
+        "gbit" | "gbits" | "gbps" => GBIT / 8.0,
+        "tbit" | "tbits" | "tbps" => TBIT / 8.0,
         _ => return Err(ParseByteSizeError(original.to_string())),
     };
 
@@ -143,6 +164,12 @@ mod tests {
             ("2Ki", 2_048),
             ("2K", 2_000),
             ("2k", 2_000),
+            ("8bit", 1),
+            ("8000 bits", 1_000),
+            ("1kbit", 125),
+            ("1Mbit", 125_000),
+            ("100mbps", 12_500_000),
+            ("1Gbps", 125_000_000),
         ];
 
         for (input, expected) in cases {

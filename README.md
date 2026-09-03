@@ -42,7 +42,9 @@ assert_eq!(format_duration(d1), "1h30m0s");
   binary units (`kib`, `mib`, `gib`, `tib`, base 1024), case-insensitive,
   with or without a space before the unit, a comma or dot as the decimal
   separator, underscores as digit separators, and a bare number read as
-  bytes.
+  bytes. Bit-based units for network throughput (`bit`, `kbit`, `mbit`,
+  `gbit`, `tbit`, and the `bps`/`kbps`/`mbps`/`gbps`/`tbps` spellings) are
+  also accepted and converted to bytes.
 - **Durations** — compound unit strings (`1h30m`, `1d2h`), a single unit
   with a decimal value (`1.5h`), colon clock notation (`1:30:00`, `5:09`),
   and a bare number read as seconds.
@@ -54,8 +56,8 @@ now — see the test tables at the bottom of `src/bytes.rs` and
 ## Status
 
 Early skeleton. Parsing and formatting for both units work and are covered
-by table-driven tests, but the unit list is intentionally small (no bits,
-no weeks) until something needs them.
+by table-driven tests, but the unit list is intentionally small (no weeks)
+until something needs them.
 
 ## License
 
